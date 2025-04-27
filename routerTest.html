@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Vue Routerの基本</title>
+		<script src="https://cdn.jsdelivr.net/npm/vue@3.2.42/dist/vue.global.prod.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/vue-router@4.1.6/dist/vue-router.global.prod.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<ul>
+				<!-- 実体としては単なる<a> -->
+				<li><router-link to="/">Rootの表示</router-link></li>
+				<li><router-link to="/page1">Page1の表示</router-link></li>
+				<li><router-link to="/page2">Page2の表示</router-link></li>
+				<li><router-link to="/pages/3">Pages/3の表示</router-link></li>
+				<li><router-link to="/pages/0/1/2/3">Pages/0/1/2/3の表示</router-link></li>
+				<!-- URLを直接入力しなくてもルーティングにつけた名称での遷移も可能(ただしバインドが必要) -->
+				<li><router-link :to="{ name: 'page2' }">Pages2の表示</router-link></li>
+				<!-- 複数の条件にマッチするルーティングでも名前により明示的に指定できる -->
+				<li><router-link :to="{ name: 'pages-str', params: { str: 12346 } }">Pages/123456の表示</router-link></li>
+				<!-- パラメータを反復する場合は配列を使う -->
+				<li><router-link :to="{ name: 'pages-0', params: { params: [123, 456] } }">Pages/0/123/456の表示</router-link></li>
+			</ul>
+
+			<!-- ルータで紐づけられたコンポーネントを表示 -->
+			<router-view></router-view>
+			<hr>
+			<!-- 名前を付けることにより複数の位置でコンポーネントを表示することが可能 -->
+			<router-view name="side"></router-view>
+		</div>
+	</body>
+
+	<!-- DOMContentLoadedイベントで記述するとスコープがきついのでここで書く -->
+	<script>
+		const { createApp } = Vue
+		const { createRouter, createWebHashHistory } = VueRouter
+
+		// スタティックルートテーブルの定義(URLとコンポーネントを紐づける)
+		const routes = [
+			// 各連想配列はルートの定義
+			{ path: '/', component: { template: `Root` } },
+			{ path: '/page1', component: { template: `Page1` } },
+			{ path: '/page2', name: 'page2', components: {
+				// 名前なしの<router-view>に表示するコンポーネント
+				default: { template: `Page2` },
+				// <router-view name="side">に表示するコンポーネント
+				side: { template: `Page2(Side)` }
+			}},
+			// ディレクトリパラメータも使うことができる
+			// $route.params.numでディレクトリパラメータを取得できる
+			{ path: '/pages/:str', name: 'pages-str', component: { template: `Pages/:str={{ $route.params.str }}` } },
+			// ディレクトリパラメータには正規表現による制約も利用できる
+			{ path: '/pages/:num(\\d+)', component: { template: `Pages/:num={{ $route.params.num }}` } },
+			// パラメータ自体を反復することもできる
+			// "+"を用いると1回以上の反復、"*"を用いると0回以上の反復、"?"を用いると0回か1回
+			{ path: '/pages/0/:params+', name: 'pages-0', component: { template: `Pages/0/:params={{ $route.params.params }}` } },
+		]
+
+		// ルータの構築
+		const router = createRouter({
+			history: createWebHashHistory(),
+			routes,
+		})
+
+		// Vue Routerプラグインを使うことを宣言する
+		createApp().use(router).mount('#app')
+	</script>
+</html>
+<!-- https://168iroha.net/blog/article/202305131318/ -->
